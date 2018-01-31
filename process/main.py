@@ -1,13 +1,17 @@
+
 import os
+
 from builtins import print
+
 
 import distance
 import numpy as np
-from scipy import math, spatial
 from scipy.stats import pearsonr
 from sklearn.metrics import f1_score
 from sklearn.naive_bayes import GaussianNB
 from tqdm import tqdm
+
+
 
 matrix = []
 movies = []
@@ -16,7 +20,6 @@ movie_index_map = {}
 index_movie_map = {}
 
 bayes = GaussianNB()
-
 
 def init():
     global matrix
@@ -36,23 +39,44 @@ def init():
     #
     # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
 
+    for i in range(matrix.shape[0]):
+        # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
+        # t.start()
+        check_movie_liking_for_user(i)
+
+    # up = user_preference(0, 2)
+    # ia = item_acceptance(0, 2)
+    # fi = friend_inference(0, 2)
+    # output = round((up + ia + fi) / 3, 4)
+    # print(up)
+    # print(ia)
+    # print(fi)
+    #
+    # print(output)
+
+
+def check_movie_liking_for_user(user_row_id):
+    global movies
     likings = []
     for movie_index in tqdm(range(movies.shape[0])):
-        likings.append([check_movie_liking(1, int(movie_index), movies[int(movie_index)]), int(movie_index),
-                        movies[int(movie_index)][1]])
+        liking = check_movie_liking(user_row_id, int(movie_index), movies[int(movie_index)]), int(movie_index), movies[int(movie_index)][1]
+        likings.append(liking)
 
     likings = np.array(likings)
     likings = likings[likings[:, 0].argsort()[::-1]]
 
-    for like in likings:
-        print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
+    with open('../output/output_'+str(user_row_id)+'.csv', 'w') as the_file:
+        the_file.write('movie_row_index,probability,movie_title' + '\n')
+        for like in likings:
+            print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
+            the_file.write(str(like[1]) + ',' + str(like[0]) + ',' + str(like[2]) + '\n')
 
 
 def check_movie_liking(user_row_id, movie_column_id, movie):
     up = user_preference(user_row_id, movie_column_id)
     ia = item_acceptance(user_row_id, movie_column_id)
-    fi = friend_inference(user_row_id, movie_column_id)
-    output = round(up * ia * fi, 4)
+    fi = 0 #friend_inference(user_row_id, movie_column_id)
+    output = round((up + ia + fi) / 3, 4)
     # output = up * ia * fi
     # print('Liking of the user: '+str(user_row_id) + ' of the movie: '+str(movie[1]) + ' is: ' + str(output))
 
@@ -63,8 +87,9 @@ def similar_movies(matrix_column):
     global movies
 
     similar = []  # [similarity, matrix_number, movie_id, movie_name]
+    # temp_movies = np.delete(movies, matrix_column, axis=0)
     for i, id_movie_genres in enumerate(movies):
-        if id_movie_genres[0] != index_movie_map[matrix_column]:
+        if id_movie_genres[0] == index_movie_map[matrix_column]:
             active_column = id_movie_genres[2].split('|')
             current_column = movies[int(matrix_column), 2].split('|')
             similarity = 1 - distance.jaccard(active_column, current_column)
@@ -88,6 +113,11 @@ def user_preference(matrix_row, matrix_column):  # first factor
 
     similar = np.array(similar_movies(matrix_column)[0:10])
     similar = similar[similar[:, 1].astype(int).argsort()[::-1]]
+
+    return user_preference_for_similar_movies(temp_matrix, similar, matrix_row)
+
+
+def user_preference_for_similar_movies(temp_matrix, similar, matrix_row):
 
     temp_matrix = np.delete(temp_matrix, similar[:, 1], 1)
 
@@ -138,6 +168,10 @@ def item_acceptance(matrix_row, matrix_column):  # second factor
     similar_users = similar_users[similar_users[:, 0].argsort()[::-1]][
                     0:100]  # we take first 100 users as "friends" of active user
 
+    return item_accaptance_for_similar_users(temp_matrix, similar_users, matrix_column)
+
+
+def item_accaptance_for_similar_users(temp_matrix, similar_users, matrix_column):
     temp_matrix = np.delete(temp_matrix, similar_users[:, 1], 0)
 
     output = temp_matrix[:, matrix_column].astype(int)
@@ -180,43 +214,16 @@ def friend_inference(matrix_row, matrix_column):  # third factor
     similar_users = similar_users[similar_users[:, 0].argsort()[::-1]][
                     0:10]  # we take first 10 users as "friends" of active user
 
+    similar = np.array(similar_movies(matrix_column)[0:10])
+    similar = similar[similar[:, 1].astype(int).argsort()[::-1]]
+
     likings = []
     for sm in similar_users:
         # up = user_preference(sm[1], matrix_column)
-        likings.append(user_preference(int(sm[1]), matrix_column))
+        # likings.append(user_preference(int(sm[1]), matrix_column))
+        likings.append(user_preference_for_similar_movies(temp_matrix, similar, int(sm[1])))
 
     avg = np.mean(likings)
-
-    # temp_matrix = np.delete(temp_matrix, similar_users[:, 1], 0)  # delete similar users
-    # # print('Movie rate: '+str(movie_rate))
-    #
-    # similar_mv = np.array(similar_movies(matrix_column)[0:100])
-    # similar_mv = similar_mv[similar_mv[:, 1].astype(int).argsort()[::-1]]
-    #
-    # temp_matrix = np.delete(temp_matrix, similar_mv[:, 1], 1)
-    #
-    # rows = []
-    # for index in range(temp_matrix.shape[0]):
-    #     rows.append(temp_matrix[index, :].astype(int))
-    #
-    # bayes.fit(rows, output)
-    #
-    # temp_matrix = matrix[similar_users[:, 1].astype(int), :]
-    # temp_matrix[:] *= 2
-    # temp_matrix = np.delete(temp_matrix, matrix_column, 1)
-    # temp_matrix = np.delete(temp_matrix, similar_mv[:, 1], 1)
-    # rows = []
-    # for index in range(temp_matrix.shape[0]):
-    #     rows.append(temp_matrix[index, :].astype(int))
-    #
-    # # output = output = temp_matrix[matrix_row, :]
-    #
-    # prediction = np.array([bayes.predict(rows)]).T
-    # ideal_movie = np.copy(prediction)
-    # ideal_movie[:] = 10
-    # # similar = np.append(similar, prediction, axis=1) # for displaying similarities
-    #
-    # output = f1_score(prediction, ideal_movie, average='micro')
 
     return avg
 
