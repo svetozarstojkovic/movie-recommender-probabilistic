@@ -1,5 +1,6 @@
 
 import os
+import threading
 
 from builtins import print
 
@@ -11,8 +12,6 @@ from sklearn.metrics import f1_score
 from sklearn.naive_bayes import GaussianNB
 from tqdm import tqdm
 
-
-
 matrix = []
 movies = []
 
@@ -20,6 +19,7 @@ movie_index_map = {}
 index_movie_map = {}
 
 bayes = GaussianNB()
+
 
 def init():
     global matrix
@@ -40,9 +40,9 @@ def init():
     # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
 
     for i in range(matrix.shape[0]):
-        # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
-        # t.start()
-        check_movie_liking_for_user(i)
+        t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
+        t.start()
+        # check_movie_liking_for_user(i)
 
     # up = user_preference(0, 2)
     # ia = item_acceptance(0, 2)
