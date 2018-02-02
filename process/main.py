@@ -40,6 +40,8 @@ def init():
     # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
 
     for i in range(matrix.shape[0]):
+        if os.path.isfile("../output/output_"+str(i)+".csv"):
+            continue
         # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
         # t.start()
         check_movie_liking_for_user(i)

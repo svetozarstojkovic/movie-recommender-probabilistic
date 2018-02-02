@@ -21,7 +21,7 @@ def mnist_temp():
 
 
 def small_temp():
-    with open('dataset/small/ratings.csv', 'r', encoding='utf8') as f:
+    with open('dataset/small/ratings.csv', 'r') as f:
         reader = csv.reader(f)
         print('before np.array')
 
