@@ -81,7 +81,7 @@ def fill_small_movies():
     global movies
     movies = []
 
-    with open('../dataset/small/movies.csv', 'r') as f:
+    with open('../dataset/small/movies.csv', 'r', encoding='utf8') as f:
         reader = csv.reader(f)
         movies = np.array(list(reader))
         movies = np.delete(movies, 0, 0)
@@ -97,7 +97,7 @@ def fill_small_users():
     rating = []
     users = []
 
-    with open('../data/small_rating.csv', 'r') as f:
+    with open('../data/small_rating.csv', 'r', encoding='utf8') as f:
         reader = csv.reader(f)
         print('Reading rating file')
         rating = list(reader)

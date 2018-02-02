@@ -40,9 +40,9 @@ def init():
     # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
 
     for i in range(matrix.shape[0]):
-        t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
-        t.start()
-        # check_movie_liking_for_user(i)
+        # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
+        # t.start()
+        check_movie_liking_for_user(i)
 
     # up = user_preference(0, 2)
     # ia = item_acceptance(0, 2)
@@ -58,6 +58,7 @@ def init():
 def check_movie_liking_for_user(user_row_id):
     global movies
     likings = []
+    print('Running code for user: '+str(user_row_id))
     for movie_index in tqdm(range(movies.shape[0])):
         liking = check_movie_liking(user_row_id, int(movie_index), movies[int(movie_index)]), int(movie_index), movies[int(movie_index)][1]
         likings.append(liking)
@@ -68,7 +69,7 @@ def check_movie_liking_for_user(user_row_id):
     with open('../output/output_'+str(user_row_id)+'.csv', 'w') as the_file:
         the_file.write('movie_row_index,probability,movie_title' + '\n')
         for like in likings:
-            print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
+            # print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
             the_file.write(str(like[1]) + ',' + str(like[0]) + ',' + str(like[2]) + '\n')
 
 
