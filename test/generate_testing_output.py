@@ -1,4 +1,3 @@
-
 import os
 from builtins import print
 
@@ -9,6 +8,7 @@ from sklearn.metrics import f1_score
 from sklearn.naive_bayes import GaussianNB
 from tqdm import tqdm
 
+
 matrix = []
 movies = []
 
@@ -16,6 +16,8 @@ movie_index_map = {}
 index_movie_map = {}
 
 bayes = GaussianNB()
+
+removed_indexes_from_user29 = [140, 422, 1004, 1585, 1763, 1992, 2363, 3002, 4050, 4651]
 
 
 def init():
@@ -27,58 +29,103 @@ def init():
 
     print('Matrix shape: ' + str(matrix.shape))
 
-    # avg_rate_columns = []
-    # for index in range(matrix.shape[1]):
-    #     avg = average(matrix[:, index])
-    #     avg_rate_columns.append([avg, index])
-    #
-    # arr = np.array(avg_rate_columns)
-    #
-    # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
+    make_random_rates_zero()
 
-    for i in range(42, matrix.shape[0]):
-        if os.path.isfile("../output/output_"+str(i)+".csv"):
-            continue
-        # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
-        # t.start()
-        check_movie_liking_for_user(i)
-
-    # up = user_preference(0, 2)
-    # ia = item_acceptance(0, 2)
-    # fi = friend_inference(0, 2)
-    # output = round((up + ia + fi) / 3, 4)
-    # print(up)
-    # print(ia)
-    # print(fi)
-    #
-    # print(output)
+    check_movie_liking_for_user_2_factors(29)  # most important function
+    check_movie_liking_for_user_3_factors(29)  # most important function
 
 
-def check_movie_liking_for_user(user_row_id):
+def make_random_rates_zero():
+    global matrix
+    rated_number = {}
+    for i, row in enumerate(matrix):
+        num = 0
+        for index, rates in enumerate(row):
+            if rates == 5:
+                num = num + 1
+        rated_number[i] = num
+
+    print(rated_number)
+
+    fives_indexes = []
+    for index, rates in enumerate(matrix[29]):
+        if rates == 5:
+            fives_indexes.append(index)
+
+    for ind in removed_indexes_from_user29:
+        matrix[29][ind] = 0.0
+
+    print(fives_indexes)
+    print('Number of fives before: '+str(len(fives_indexes)))
+
+    fives_indexes = []
+    for index, rates in enumerate(matrix[29]):
+        if rates == 5:
+            fives_indexes.append(index)
+
+    print('Number of fives after: ' + str(len(fives_indexes)))
+
+
+def check_movie_liking_for_user_2_factors(user_row_id):
     global movies
     likings = []
-    print('Running code for user: '+str(user_row_id))
-    for movie_index in tqdm(range(movies.shape[0])):
-        liking = check_movie_liking(user_row_id, int(movie_index)), \
-                 int(movie_index), \
-                 movies[int(movie_index)][1]
 
-        likings.append(liking)
+    print('Running 2 factor code for user: ' + str(user_row_id))
+    for movie_index in tqdm(range(movies.shape[0])):
+        if matrix[29][movie_index] == 0:
+            liking = check_movie_liking_2(user_row_id, int(movie_index)), \
+                     int(movie_index), \
+                     movies[int(movie_index)][1]
+
+            likings.append(liking)
 
     likings = np.array(likings)
     likings = likings[likings[:, 0].argsort()[::-1]]
 
-    with open('../output/output_'+str(user_row_id)+'.csv', 'w') as the_file:
+    with open('../output_2_factors/output_' + str(user_row_id) + '.csv', 'w') as the_file:
         the_file.write('movie_row_index,probability,movie_title' + '\n')
         for like in likings:
             # print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
             the_file.write(str(like[1]) + ',' + str(like[0]) + ',' + str(like[2]) + '\n')
 
 
-def check_movie_liking(user_row_id, movie_column_id):
+def check_movie_liking_for_user_3_factors(user_row_id):
+    global movies
+    likings = []
+    print('Running 3 factor code for user: ' + str(user_row_id))
+    for movie_index in tqdm(range(movies.shape[0])):
+        if matrix[29][movie_index] == 0:
+            liking = check_movie_liking_3(user_row_id, int(movie_index)), \
+                     int(movie_index), \
+                     movies[int(movie_index)][1]
+
+            likings.append(liking)
+
+    likings = np.array(likings)
+    likings = likings[likings[:, 0].argsort()[::-1]]
+
+    with open('../output_3_factors/output_'+str(user_row_id)+'.csv', 'w') as the_file:
+        the_file.write('movie_row_index,probability,movie_title' + '\n')
+        for like in likings:
+            # print('Probability: ' + str(like[0]) + ' - ' + str(like[2]))
+            the_file.write(str(like[1]) + ',' + str(like[0]) + ',' + str(like[2]) + '\n')
+
+
+def check_movie_liking_2(user_row_id, movie_column_id):
     up = user_preference(user_row_id, movie_column_id)
     ia = item_acceptance(user_row_id, movie_column_id)
     fi = 0  # friend_inference(user_row_id, movie_column_id)
+    output = round((up + ia + fi) / 3, 4)
+    # output = up * ia * fi
+    # print('Liking of the user: '+str(user_row_id) + ' of the movie: '+str(movie[1]) + ' is: ' + str(output))
+
+    return output
+
+
+def check_movie_liking_3(user_row_id, movie_column_id):
+    up = user_preference(user_row_id, movie_column_id)
+    ia = item_acceptance(user_row_id, movie_column_id)
+    fi = friend_inference(user_row_id, movie_column_id)
     output = round((up + ia + fi) / 3, 4)
     # output = up * ia * fi
     # print('Liking of the user: '+str(user_row_id) + ' of the movie: '+str(movie[1]) + ' is: ' + str(output))
@@ -254,9 +301,4 @@ def get_matrix(matrix_location):
     return matrix
 
 
-def average(x):
-    assert len(x) > 0
-    return float(sum(x)) / len(x)
-
-
-# init()
+init()
