@@ -1,9 +1,6 @@
 
 import os
-import threading
-
 from builtins import print
-
 
 import distance
 import numpy as np
@@ -39,7 +36,7 @@ def init():
     #
     # sorted_avgs = arr[arr[:, 0].argsort()[::-1]][0:10]
 
-    for i in range(matrix.shape[0]):
+    for i in range(42, matrix.shape[0]):
         if os.path.isfile("../output/output_"+str(i)+".csv"):
             continue
         # t = threading.Thread(target=check_movie_liking_for_user, args=(i, ))
@@ -62,7 +59,10 @@ def check_movie_liking_for_user(user_row_id):
     likings = []
     print('Running code for user: '+str(user_row_id))
     for movie_index in tqdm(range(movies.shape[0])):
-        liking = check_movie_liking(user_row_id, int(movie_index), movies[int(movie_index)]), int(movie_index), movies[int(movie_index)][1]
+        liking = check_movie_liking(user_row_id, int(movie_index)), \
+                 int(movie_index), \
+                 movies[int(movie_index)][1]
+
         likings.append(liking)
 
     likings = np.array(likings)
@@ -75,10 +75,10 @@ def check_movie_liking_for_user(user_row_id):
             the_file.write(str(like[1]) + ',' + str(like[0]) + ',' + str(like[2]) + '\n')
 
 
-def check_movie_liking(user_row_id, movie_column_id, movie):
+def check_movie_liking(user_row_id, movie_column_id):
     up = user_preference(user_row_id, movie_column_id)
     ia = item_acceptance(user_row_id, movie_column_id)
-    fi = 0 #friend_inference(user_row_id, movie_column_id)
+    fi = 0  # friend_inference(user_row_id, movie_column_id)
     output = round((up + ia + fi) / 3, 4)
     # output = up * ia * fi
     # print('Liking of the user: '+str(user_row_id) + ' of the movie: '+str(movie[1]) + ' is: ' + str(output))
@@ -259,4 +259,4 @@ def average(x):
     return float(sum(x)) / len(x)
 
 
-init()
+# init()

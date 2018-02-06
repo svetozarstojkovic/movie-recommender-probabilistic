@@ -1,7 +1,8 @@
 Projekat za predmet DRUSTVENE MREZE
 
-Nacin pokretanja:
-1. create data directory in root
-2. run create_temp_data.py
-3. run write_data.py
-4. run main.py
+Prezentacija projekta se nalazi u folderu (Prezentacija je radjena u Google Slides, pa neke stvari nisu formatirane kako treba)
+: 
+`/prezentacija/Sistem za preporuku zasnovan na probabilističkom pristupu.pptx`
+
+Pokretanje testa:
+`/process/test.py`
