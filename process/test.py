@@ -25,8 +25,7 @@ def get_median_for_user29(location):
                 continue
             if int(line[0]) == index:
                 found_indexes.append(i)
-
-    print(sorted(found_indexes))
+    print('\nValues: '+str(sorted(found_indexes)))
     return np.median(found_indexes)
 
 
